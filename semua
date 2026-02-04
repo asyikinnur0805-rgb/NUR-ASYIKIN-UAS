@@ -1,0 +1,140 @@
+import pygame
+from pygame.locals import *
+from OpenGL.GL import *
+from OpenGL.GLU import *
+
+# ======================
+# Variabel Kubus 3D
+# ======================
+cube_pos = [-3, 0, -8]
+cube_rot = 0
+cube_scale = 1.0
+
+# ======================
+# Variabel Persegi 2D
+# ======================
+sq_pos = [3, 0]
+sq_rot = 0
+sq_scale = 1.0
+shear = 0.0
+reflect_x = 1
+reflect_y = 1
+
+# ======================
+# Gambar Kubus 3D
+# ======================
+def draw_cube():
+    vertices = [
+        (-1,-1,-1),(1,-1,-1),(1,1,-1),(-1,1,-1),
+        (-1,-1,1),(1,-1,1),(1,1,1),(-1,1,1)
+    ]
+    edges = [
+        (0,1),(1,2),(2,3),(3,0),
+        (4,5),(5,6),(6,7),(7,4),
+        (0,4),(1,5),(2,6),(3,7)
+    ]
+    glColor3f(0.8, 0.8, 0.8)
+    glBegin(GL_LINES)
+    for edge in edges:
+        for v in edge:
+            glVertex3fv(vertices[v])
+    glEnd()
+
+# ======================
+# Gambar Persegi 2D
+# ======================
+def draw_square():
+    glColor3f(0, 1, 0)
+    glBegin(GL_QUADS)
+    glVertex2f(-0.5, -0.5)
+    glVertex2f( 0.5, -0.5)
+    glVertex2f( 0.5,  0.5)
+    glVertex2f(-0.5,  0.5)
+    glEnd()
+
+# ======================
+# MAIN
+# ======================
+pygame.init()
+pygame.display.set_mode((900, 600), DOUBLEBUF | OPENGL)
+pygame.display.set_caption("Kubus 3D & Persegi 2D")
+
+glMatrixMode(GL_PROJECTION)
+gluPerspective(45, 900/600, 0.1, 50)
+glMatrixMode(GL_MODELVIEW)
+
+clock = pygame.time.Clock()
+running = True
+
+while running:
+    clock.tick(60)
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    glEnable(GL_DEPTH_TEST)
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    keys = pygame.key.get_pressed()
+
+    # ======================
+    # Kontrol Kubus 3D
+    # ======================
+    if keys[K_w]: cube_pos[1] += 0.1
+    if keys[K_s]: cube_pos[1] -= 0.1
+    if keys[K_a]: cube_pos[0] -= 0.1
+    if keys[K_d]: cube_pos[0] += 0.1
+    if keys[K_q]: cube_rot += 2
+    if keys[K_e]: cube_rot -= 2
+    if keys[K_z]: cube_scale += 0.02
+    if keys[K_x]: cube_scale -= 0.02
+
+    # ======================
+    # Kontrol Persegi 2D
+    # ======================
+    if keys[K_i]: sq_pos[1] += 0.1
+    if keys[K_k]: sq_pos[1] -= 0.1
+    if keys[K_j]: sq_pos[0] -= 0.1
+    if keys[K_l]: sq_pos[0] += 0.1
+    if keys[K_u]: sq_rot += 2
+    if keys[K_o]: sq_rot -= 2
+    if keys[K_n]: sq_scale += 0.02
+    if keys[K_m]: sq_scale -= 0.02
+    if keys[K_h]: shear += 0.02
+    if keys[K_b]: shear = 0.0
+    if keys[K_r]: reflect_x *= -1
+    if keys[K_t]: reflect_y *= -1
+
+    # ======================
+    # Render Kubus
+    # ======================
+    glLoadIdentity()
+    glPushMatrix()
+    glTranslatef(*cube_pos)
+    glRotatef(cube_rot, 0, 1, 0)
+    glScalef(cube_scale, cube_scale, cube_scale)
+    draw_cube()
+    glPopMatrix()
+
+    # ======================
+    # Render Persegi
+    # ======================
+    glLoadIdentity()
+    glPushMatrix()
+    glTranslatef(sq_pos[0], sq_pos[1], -5)
+    glRotatef(sq_rot, 0, 0, 1)
+    glScalef(reflect_x * sq_scale, reflect_y * sq_scale, 1)
+
+    glMultMatrixf([
+        1, shear, 0, 0,
+        0, 1,     0, 0,
+        0, 0,     1, 0,
+        0, 0,     0, 1
+    ])
+
+    draw_square()
+    glPopMatrix()
+
+    pygame.display.flip()
+
+pygame.quit()
